@@ -92,6 +92,13 @@ input[type=text] {
   width: 300px;
 }
 
+.page-number{
+  display: inline-block;
+  padding: .35em;
+  border: solid black .1em;
+  margin: .5em;
+}
+
 .error {
   color: rgb(236, 15, 15);
 }
