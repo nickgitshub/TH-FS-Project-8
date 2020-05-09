@@ -73,6 +73,8 @@ app.get('/books', asyncHandler(async(req, res) => {
 	return res.render('index', { books: modResults, pages: pageArray});
 }))
 
+
+//an endpoint that can be used to search for books
 app.post('/books/search', asyncHandler(async(req, res) => {
 
 	//create a JSON object containing title, author, genre, and year
@@ -122,13 +124,21 @@ app.get('/books/new', (req, res) => {
 //posting to page for new books
 app.post('/books/new', asyncHandler(async(req, res) => {
 	await db.sequelize.sync();
-	const newBook = await Book.create({
+	try{
+		const newBook = await Book.create({
 		title: req.body.title,
 		author: req.body.author,
 		genre: req.body.genre,
 		year: req.body.year
-	})
-	return res.render('new-book');
+		})
+		return res.render('new-book');
+	} catch(error){
+		if(error.name === "SequelizeValidationError") {
+			return res.render('new-book', {errors: "Author and Title are required"});
+		} else{
+			throw error; 
+		}
+	}	
 }))
 
 
@@ -136,9 +146,11 @@ app.post('/books/new', asyncHandler(async(req, res) => {
 app.get('/books/:id', asyncHandler(async(req, res) => {
 	await db.sequelize.sync();
 	const retrievedBook= await Book.findByPk(req.params.id)
-
-	return res.render('update-book', { book: retrievedBook });
-
+	if(retrievedBook){
+		return res.render('update-book', { book: retrievedBook });
+	} else {
+	    res.render('page-not-found');
+	}
 	
 }))
 
@@ -146,14 +158,27 @@ app.get('/books/:id', asyncHandler(async(req, res) => {
 app.post('/books/:id', asyncHandler(async(req, res) => {
 	await db.sequelize.sync();
 	const retrievedBook = await Book.findByPk(req.params.id)
-	retrievedBook.update({
-		title: req.body.title,
-		author: req.body.author,
-		genre: req.body.genre,
-		year: req.body.year
-	})
-
-	res.redirect('/books')
+	if(retrievedBook){
+		try{
+			await retrievedBook.update({
+				title: req.body.title,
+				author: req.body.author,
+				genre: req.body.genre,
+				year: req.body.year
+			})
+			res.redirect('/books/')
+		} catch (error){
+			if(error.name === "SequelizeValidationError") {
+				return res.render('update-book', {book: retrievedBook, errors: "Author and Title are required"});
+			} else{
+				throw error; 
+			}
+		}
+	} else {
+		res.render('page-not-found');
+	}
+	
+	
 }))
 
 //.deleting a particular book
@@ -161,16 +186,18 @@ app.post('/books/:id/delete', asyncHandler(async(req, res) => {
 	await db.sequelize.sync();
 	const retrievedBook = await Book.findByPk(req.params.id)
 
-
-	await retrievedBook.destroy()
-
-	res.redirect('/books');
+	if(retrievedBook){
+		await retrievedBook.destroy()
+		res.redirect('/books');
+	} else {
+	    res.render('page-not-found');
+	}
+	
 }))
 
 
 //404 error being created if no route is found
 app.use((req,res, next) => {
-	console.log('-------------- \n 404 Error \n --------------')
 	const err = new Error('Route Not Found');
 	err.status = 404;
 	next(err);
@@ -178,15 +205,14 @@ app.use((req,res, next) => {
 
 //renders errors if any are caught on page
 app.use((err, req, res, next) => {
-	console.log('-------------- \n Error Function \n --------------')
-	console.log('-------------- \n' + err + '\n--------------')
-	// res.status(err.status);
-	// res.locals.error = err;
-	// if(err.status === 404){
-	// 	res.render('page-not-found');
-	// } else {
-	// 	res.render('error');
-	// }
+	console.log(err)
+	res.status(err.status);
+	res.locals.error = err;
+	if(err.status === 404){
+		res.render('page-not-found');
+	} else {
+		res.render('error');
+	}
 })
 
 
