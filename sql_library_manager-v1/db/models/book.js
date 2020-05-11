@@ -8,10 +8,9 @@ module.exports = (sequelize) => {
 			author: { type: Sequelize.STRING, allowNull: false, validate: { notEmpty: {msg: 'Please provide an author'}}},
 			genre: { type: Sequelize.STRING, allowNull: true },
 			year: { type: Sequelize.STRING, allowNull: true },
-
 		},
 		
-		{ sequelize } // set sequelize property to sequelize variable
+		{ sequelize } 
 	);
 
 	return Book; 
