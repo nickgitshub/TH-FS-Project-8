@@ -10,9 +10,10 @@ app.use(express.urlencoded())
 const Sequelize = require('sequelize');
 const { Op } = require('sequelize');
 
-
+//set up database 
 const db = require('./db');
 const { Book } = db.models;
+db.sequelize.sync();
 
 
 //asyncHandler
@@ -65,7 +66,6 @@ app.get('/', asyncHandler(async(req, res) => {
 
 //creates an index page of 'books'
 app.get('/books', asyncHandler(async(req, res) => {
-	await db.sequelize.sync();
 
 	const bookResults = await Book.findAll();
 	const [modResults, pageArray] = modifyQuery(bookResults)
@@ -78,7 +78,6 @@ app.get('/books', asyncHandler(async(req, res) => {
 app.post('/books/search', asyncHandler(async(req, res) => {
 
 	//create a JSON object containing title, author, genre, and year
-	await db.sequelize.sync();
 	const searchResults = await Book.findAll({
 		attributes: ['id', 'title', 'author', 'genre', 'year']
 	});
@@ -123,7 +122,6 @@ app.get('/books/new', (req, res) => {
 
 //posting to page for new books
 app.post('/books/new', asyncHandler(async(req, res) => {
-	await db.sequelize.sync();
 	try{
 		const newBook = await Book.create({
 		title: req.body.title,
@@ -156,7 +154,6 @@ app.get('/books/:id', asyncHandler(async(req, res) => {
 
 //updating a particular book
 app.post('/books/:id', asyncHandler(async(req, res) => {
-	await db.sequelize.sync();
 	const retrievedBook = await Book.findByPk(req.params.id)
 	if(retrievedBook){
 		try{
@@ -183,7 +180,6 @@ app.post('/books/:id', asyncHandler(async(req, res) => {
 
 //.deleting a particular book
 app.post('/books/:id/delete', asyncHandler(async(req, res) => {
-	await db.sequelize.sync();
 	const retrievedBook = await Book.findByPk(req.params.id)
 
 	if(retrievedBook){
